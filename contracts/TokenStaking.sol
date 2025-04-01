@@ -7,6 +7,8 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
+// import "hardhat/console.sol";
+
 /**
  * @title TokenStaking
  * @notice Staking contract for Token.
@@ -116,7 +118,10 @@ contract TokenStaking is Ownable, ReentrancyGuard {
     }
 
     modifier hasStakeAtIndex(uint stakeIndex, address user) {
-        require(stakes[user].length > 0, "No staked funds for sender");
+        require(
+            stakes[user].length > 0,
+            "No staking info for sender at given index"
+        );
         require(
             stakes[user][stakeIndex].amount != 0,
             "Amount is zero at index."
@@ -174,7 +179,10 @@ contract TokenStaking is Ownable, ReentrancyGuard {
             stakes[msg.sender][stakeIndex].amount) / 100;
 
         if (reward > 0) {
-            if (reward > stakingToken.balanceOf(address(this))) {
+            uint balanceToReturn = reward +
+                stakes[msg.sender][stakeIndex].amount;
+
+            if (balanceToReturn > stakingToken.balanceOf(address(this))) {
                 revert InsufficientRewardTokens();
             }
 
@@ -198,5 +206,14 @@ contract TokenStaking is Ownable, ReentrancyGuard {
         uint stakeIndex
     ) public view hasStakeAtIndex(stakeIndex, user) returns (StakeInfo memory) {
         return stakes[user][stakeIndex];
+    }
+
+    /**
+     * @notice Get the stake for a user.
+     * @param account The address of the user to get the stake for.
+     * @return The stake.
+     */
+    function getAccountStakeCount(address account) public view returns (uint) {
+        return stakes[account].length;
     }
 }
