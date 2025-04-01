@@ -92,6 +92,7 @@ contract TokenVesting is Ownable, ReentrancyGuard {
         address _beneficiary,
         uint256 _start,
         uint256 _cliff,
+        uint256 _releasedOnCliffPrc,
         uint256 _duration,
         uint256 _slicePeriodSeconds,
         bool _revocable,
@@ -115,7 +116,8 @@ contract TokenVesting is Ownable, ReentrancyGuard {
         vestingSchedules[vestingScheduleId] = VestingSchedule(
             _beneficiary,
             cliff,
-            (_amount * 33) / 100,
+            (_amount * _releasedOnCliffPrc) / 100,
+            // (_amount * 33) / 100,
             _start,
             _duration,
             _slicePeriodSeconds,
