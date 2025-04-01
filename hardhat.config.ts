@@ -7,6 +7,14 @@ const config: HardhatUserConfig = {
     hardhat: {
       chainId: 97,
     },
+
+    testnet: {
+      url: "https://bsc-testnet-rpc.publicnode.com",
+      chainId: 97,
+      accounts: {
+        mnemonic: "",
+      },
+    },
   },
 };
 
