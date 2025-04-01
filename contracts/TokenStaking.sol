@@ -7,7 +7,7 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
-// import "hardhat/console.sol";
+import "hardhat/console.sol";
 
 /**
  * @title TokenStaking
@@ -187,10 +187,7 @@ contract TokenStaking is Ownable, ReentrancyGuard {
             }
 
             stakes[msg.sender][stakeIndex].withdrawn = true;
-            stakingToken.safeTransfer(
-                msg.sender,
-                reward + stakes[msg.sender][stakeIndex].amount
-            );
+            stakingToken.safeTransfer(msg.sender, balanceToReturn);
 
             emit RewardPaid(msg.sender, reward);
         }

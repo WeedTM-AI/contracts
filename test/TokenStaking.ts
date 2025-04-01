@@ -4,7 +4,7 @@ import {
 } from "@nomicfoundation/hardhat-toolbox-viem/network-helpers";
 import { expect } from "chai";
 import hre from "hardhat";
-import { getAddress, getContract, WalletClient, PublicClient } from "viem";
+import { getAddress, getContract } from "viem";
 import { bscTestnet } from "viem/chains";
 
 const days90RewardMultiplier = 100n;
@@ -280,7 +280,7 @@ describe("TokenStaking", function () {
       );
     });
 
-    it("Should get rewards when stake period is over", async function () {
+    it("Should get rewards when 90day stake period is over", async function () {
       const {
         publicClient,
         otherAccount,
@@ -352,6 +352,81 @@ describe("TokenStaking", function () {
 
       expect(tokenBalance - initialTokenBalance).to.equal(
         10000n + (1n / 10n) * 10000n
+      );
+    });
+
+    it("Should get rewards when 180day stake period is over", async function () {
+      const {
+        publicClient,
+        otherAccount,
+        tokenStakingContract,
+        tokenContract,
+        owner,
+      } = await loadFixture(deployFixture);
+
+      const contract = getContract({
+        address: tokenStakingContract.address,
+        abi: tokenStakingContract.abi,
+        client: otherAccount,
+      });
+
+      const tokenContractWc = getContract({
+        address: tokenContract.address,
+        abi: tokenContract.abi,
+        client: otherAccount,
+      });
+      const ownerTokenContractWc = getContract({
+        address: tokenContract.address,
+        abi: tokenContract.abi,
+        client: owner,
+      });
+
+      await ownerTokenContractWc.write.transfer([
+        tokenStakingContract.address,
+        2000000n,
+      ]);
+
+      const addresses = await otherAccount.getAddresses();
+
+      const initialTokenBalance = await tokenContractWc.read.balanceOf([
+        addresses[0],
+      ]);
+
+      // approve spending of token to staking contract
+      const approveHash = await tokenContractWc.write.approve(
+        [tokenStakingContract.address, 10000000n],
+        { account: addresses[0] }
+      );
+
+      await publicClient.waitForTransactionReceipt({
+        hash: approveHash,
+      });
+
+      const {
+        request: { args, ...options },
+      } = await contract.simulate.createStake(
+        [10000n, BigInt(180 * 24 * 60 * 60)],
+        { account: addresses[0] }
+      );
+
+      const hash = await contract.write.createStake(
+        args as [bigint, bigint],
+        options
+      );
+
+      await publicClient.waitForTransactionReceipt({ hash });
+
+      await time.increase(180 * 24 * 60 * 61);
+
+      const rewardHash = await contract.write.getReward([0n], {
+        account: addresses[0],
+      });
+      await publicClient.waitForTransactionReceipt({ hash: rewardHash });
+
+      const tokenBalance = await tokenContractWc.read.balanceOf([addresses[0]]);
+
+      expect(tokenBalance - initialTokenBalance).to.equal(
+        (days180RewardMultiplier / 100n) * 10000n
       );
     });
 
