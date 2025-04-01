@@ -20,7 +20,7 @@ describe("TokenStaking", function () {
       chain: bscTestnet,
     });
 
-    const tokenContract = await hre.viem.deployContract("MyToken", [
+    const tokenContract = await hre.viem.deployContract("Weed", [
       owner.account.address,
       owner.account.address,
     ]);
